@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TimeClient from "../components/TimeClient";
+import MarkdownContent from "../components/MarkdownContent";
 
 // Types for chat messages compatible with OpenAI-like APIs
 export type ChatRole = "user" | "assistant" | "system";
@@ -229,6 +230,17 @@ export default function ChatPage() {
     el.style.height = `${el.scrollHeight}px`;
   }
 
+  function exportChat() {
+    const data = JSON.stringify(messages, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `chat-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col p-4">
       <header className="mb-4 flex items-center justify-between gap-3">
@@ -269,8 +281,17 @@ export default function ChatPage() {
           <button
             onClick={clearChat}
             className="rounded-lg border border-zinc-200 bg-white/70 px-3 py-1.5 text-sm shadow-sm transition hover:bg-white dark:border-zinc-700 dark:bg-zinc-800/70 dark:hover:bg-zinc-800"
+            aria-label="Xóa hội thoại"
           >
             Xóa hội thoại
+          </button>
+          <button
+            onClick={exportChat}
+            className="rounded-lg border border-zinc-200 bg-white/70 px-3 py-1.5 text-sm shadow-sm transition hover:bg-white dark:border-zinc-700 dark:bg-zinc-800/70 dark:hover:bg-zinc-800"
+            aria-label="Xuất lịch sử chat"
+            title="Tải về file JSON"
+          >
+            Export
           </button>
           {mounted && (
             <button
@@ -286,6 +307,7 @@ export default function ChatPage() {
                   : "border-zinc-200 bg-white/70 hover:bg-white dark:border-zinc-700 dark:bg-zinc-800/70 dark:hover:bg-zinc-800"
               }`}
               title={persist ? "Đang lưu trên trình duyệt" : "Không lưu lịch sử"}
+              aria-label={persist ? "Tắt lưu lịch sử" : "Bật lưu lịch sử"}
             >
               {/* Bookmark icon indicating persistence */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -302,6 +324,7 @@ export default function ChatPage() {
               }}
               className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white/70 text-zinc-700 shadow-sm transition hover:bg-white dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200 dark:hover:bg-zinc-800"
               title={theme === "dark" ? "Chuyển sáng" : "Chuyển tối"}
+              aria-label={theme === "dark" ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
             >
               {theme === "dark" ? (
                 // Sun icon
@@ -328,6 +351,7 @@ export default function ChatPage() {
             onClick={() => setShowSystem((v) => !v)}
             className="hidden sm:grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white/70 text-zinc-700 shadow-sm transition hover:bg-white dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200 dark:hover:bg-zinc-800"
             title="System prompt"
+            aria-label={showSystem ? "Ẩn system prompt" : "Hiện system prompt"}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 20h9" />
@@ -399,6 +423,7 @@ export default function ChatPage() {
                           onClick={() => handleCopy(m.content)}
                           className="absolute right-1 top-1 hidden rounded px-1.5 py-0.5 text-[10px] opacity-80 ring-1 ring-white/40 hover:opacity-100 group-hover:block"
                           title="Copy"
+                          aria-label="Copy tin nhắn"
                         >
                           Copy
                         </button>
@@ -426,10 +451,11 @@ export default function ChatPage() {
                           onClick={() => handleCopy(m.content)}
                           className="absolute right-1 top-1 hidden rounded px-1.5 py-0.5 text-[10px] opacity-70 ring-1 ring-zinc-300 hover:opacity-100 group-hover:block dark:ring-zinc-600"
                           title="Copy"
+                          aria-label="Copy câu trả lời"
                         >
                           Copy
                         </button>
-                        <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                        <MarkdownContent content={m.content} />
                         {m.createdAt && (
                           <TimeClient timestamp={m.createdAt} className="mt-1 text-[10px] text-zinc-500 dark:text-zinc-400" />
                         )}
@@ -460,6 +486,7 @@ export default function ChatPage() {
               scrollToBottom("smooth");
             }}
             className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur transition hover:bg-white dark:border-zinc-700 dark:bg-zinc-800/90 dark:hover:bg-zinc-800"
+            aria-label="Cuộn xuống cuối"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="7 13 12 18 17 13" />
@@ -497,6 +524,7 @@ export default function ChatPage() {
           onClick={() => sendMessage()}
           disabled={!canSend}
           className="h-[48px] shrink-0 rounded-lg bg-blue-600 px-4 text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Gửi tin nhắn"
         >
           <span className="inline-flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
